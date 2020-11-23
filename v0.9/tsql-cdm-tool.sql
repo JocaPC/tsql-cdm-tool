@@ -10,7 +10,7 @@ SET QUOTED_IDENTIFIER OFF;
 GO
 
 CREATE OR ALTER PROCEDURE cdm.run
-					@root nvarchar(4000) = NULL,
+					@model nvarchar(4000) = NULL,
 					@command nvarchar(4000) = NULL,
 					@entity nvarchar(100) = NULL,
 					@view nvarchar(100) = NULL,
@@ -48,20 +48,20 @@ AS BEGIN
 
 		print '2. List all entities in model.json file:'
 		print 'EXEC cdm.run'
-		print '	@root = N''https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json'','
+		print '	@model = N''https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json'','
 		print '	@command = ''entities'''
 		print ''
 
 		print '3. Generate view for the entity ''Products'' in model.json file:'
 		print 'EXEC cdm.run'
-		print '	@root = N''https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json'','
+		print '	@model = N''https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json'','
 		print '	@command = ''generate'', -- or ''show-view'' to just display the SQL script'
 		print '	@entity = ''Product'''
 		print ''
 
 		print '4. Generate create view script for the entities in model.json file:'
 		print 'EXEC cdm.run'
-		print '	@root = N''https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json'','
+		print '	@model = N''https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json'','
 		print '	@command = ''script'''
 		print ''
 
@@ -83,7 +83,7 @@ AS BEGIN
 	declare @sqlGetModelJson nvarchar(max) = "
 	-- TODO: Replace this with SINGLE_CLOB
 	select @model_json = c.value
-	from openrowset(bulk '"+@root+"',
+	from openrowset(bulk '"+@model+"',
 	FORMAT='CSV',
 			FIELDTERMINATOR ='0x0b', 
 			FIELDQUOTE = '0x0b', 
@@ -123,14 +123,14 @@ AS BEGIN
 
     /*
 EXEC cdm.run
-	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
+	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
     @command = 'script',
     @entity = 'Customer',
     @view = 'dbo.Customer'
     */
 		SELECT CONCAT(
 'EXEC cdm.run
-			@root = N''',@root, ''',
+			@model = N''',@model, ''',
             @command = N''generate'',
 			@entity = ''', JSON_VALUE(j.value, '$.name'), ''',
 			@view = ''', @schema, '.', JSON_VALUE(j.value, '$.name'), '''')
@@ -301,35 +301,35 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 EXEC cdm.run
 
 EXEC cdm.run
-	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
+	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'model'
 
 EXEC cdm.run
-	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
+	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'entities'
 
 EXEC cdm.run
-	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
+	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'Customer'
 
 EXEC cdm.run
-	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
+	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'script',
 	@entity = 'Product',
 	@options = '{"schema":"cdm"}'
 
 EXEC cdm.run
-	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
+	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'files',
 	@entity = 'Product'
 
 EXEC cdm.run
-	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
+	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'columns',
 	@entity = 'Product'
 
 EXEC cdm.run
-	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
+	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'script'
 
 */
