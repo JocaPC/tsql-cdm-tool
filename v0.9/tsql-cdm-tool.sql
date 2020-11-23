@@ -55,7 +55,7 @@ AS BEGIN
 		print '3. Generate view for the entity ''Products'' in model.json file:'
 		print 'EXEC cdm.run'
 		print '	@root = N''https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json'','
-		print '	@command = ''generate'', -- or ''show-view'' to just displaythe SQL script'
+		print '	@command = ''generate'', -- or ''show-view'' to just display the SQL script'
 		print '	@entity = ''Product'''
 		print ''
 
@@ -67,6 +67,11 @@ AS BEGIN
 
 		return;
 	end
+
+    if (@command not in ('entities', 'show-entities', 'generate', 'view', 'show-view', 'script', 'files', 'columns', 'model')) begin
+        set @entity = @command;
+        set @command = 'show-view';
+    end
 
 	if (@view is null)
 		set @view = @schema + '.' + @entity;
@@ -113,15 +118,24 @@ AS BEGIN
 		RETURN;
 	END
 
-	IF (@command IN ('generate', 'generate-all', 'script-all'))
+	IF (@command IN ('generate', 'script') AND (@entity IS NULL))
 	BEGIN
+
+    /*
+EXEC cdm.run
+	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
+    @command = 'script',
+    @entity = 'Customer',
+    @view = 'dbo.Customer'
+    */
 		SELECT CONCAT(
-'EXEC cdm.sp_generate_from_model
+'EXEC cdm.run
 			@root = N''',@root, ''',
-			@model = ''', JSON_VALUE(j.value, '$.name'), ''',
+            @command = N''generate'',
 			@entity = ''', JSON_VALUE(j.value, '$.name'), ''',
 			@view = ''', @schema, '.', JSON_VALUE(j.value, '$.name'), '''')
 		FROM OPENJSON (@json, '$.entities') as j
+
 		RETURN;
 	END
 
@@ -239,14 +253,16 @@ AS BEGIN
 
 	set @sql = 'CREATE OR ALTER VIEW ' + @view + ' AS ' + @sql;
 	
-	IF (@command IN ('show-view', 'view') )
+	IF (@command IN ('view', 'script') )
 	BEGIN
 		PRINT @sql;
 		drop table if exists #files
 		drop table if exists #groups
 		RETURN;
 	END
+    PRINT 'Creating view...'
 	EXEC (@sql)
+    PRINT 'View is created!'
 	--SELECT [XML_F52E2B61-18A1-11d1-B105-00805F49916B] = @sql
 	--print @sql
 	
@@ -286,11 +302,19 @@ EXEC cdm.run
 
 EXEC cdm.run
 	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
+	@command = 'model'
+
+EXEC cdm.run
+	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'entities'
 
 EXEC cdm.run
 	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
-	@command = 'show-view',
+	@command = 'Customer'
+
+EXEC cdm.run
+	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
+	@command = 'script',
 	@entity = 'Product',
 	@options = '{"schema":"cdm"}'
 
@@ -299,10 +323,13 @@ EXEC cdm.run
 	@command = 'files',
 	@entity = 'Product'
 
-
-EXEC cdm.generate_from_model
+EXEC cdm.run
 	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
-	@options = '{ "command": "script"}'
+	@command = 'columns',
+	@entity = 'Product'
 
+EXEC cdm.run
+	@root = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
+	@command = 'script'
 
 */
