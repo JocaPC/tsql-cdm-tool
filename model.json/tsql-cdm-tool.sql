@@ -3,10 +3,17 @@
 *   Licence: MIT (see the end of the file)
 */
 
---> Prerequisite: setup SAS to CDM storage or add Storage Reader role for AAD user that will generate view
---> Create schema for the view that should be generated (or use existing schema like dbo)
+--> Prerequisite:
+-- 1. Create Synapse Analytics workspace with serverless SQL pool
+-- 2. Setup SAS to CDM Azure storage or add Storage Reader role for AAD user that will generate view
+-- 3. Execute this script in your database.
+-- 4. Create schema for the view that should be generated (or use existing schema like dbo)
+-- 5. Exec cdd.run and follow the instructions
 
 SET QUOTED_IDENTIFIER OFF;
+GO
+
+CREATE SCHEMA cdm;
 GO
 
 CREATE OR ALTER PROCEDURE cdm.run
