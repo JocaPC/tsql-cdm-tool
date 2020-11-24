@@ -3,17 +3,10 @@
 *   Licence: MIT (see the end of the file)
 */
 
---> Prerequisite:
--- 1. Create Synapse Analytics workspace with serverless SQL pool
--- 2. Setup SAS to CDM Azure storage or add Storage Reader role for AAD user that will generate view
--- 3. Execute this script in your database.
--- 4. Create schema for the view that should be generated (or use existing schema like dbo)
--- 5. Exec cdd.run and follow the instructions
+--> Prerequisite: setup SAS to CDM storage or add Storage Reader role for AAD user that will generate view
+--> Create schema for the view that should be generated (or use existing schema like dbo)
 
 SET QUOTED_IDENTIFIER OFF;
-GO
-
-CREATE SCHEMA cdm;
 GO
 
 CREATE OR ALTER PROCEDURE cdm.run
@@ -45,7 +38,7 @@ AS BEGIN
 		print '	@command = "entities"	--> List of all entities found in model.json.'
 		print '	@command = "generate"	--> Generate view for the entity in model.json. @entity is required.'
 		print '	@command = "script"		--> Generate CREATE VIEW script for all entities in model.json.'
-		print '	@command = "files"		--> List of all files for the entitiy in model.json. @entity is required.'
+		print '	@command = "files"		--> List of all files for the entitiy in model.json. @entity is required. ''partitions'', ''files'', and ''locations'' are aliases.'
 		print '	@command = "columns"	--> Show columns that belong to the entity in model.json. @entity is required.'
 		print '	@command = "model"		--> Show content of model.json.'
 
@@ -62,7 +55,7 @@ AS BEGIN
 		print '3. Generate view for the entity ''Products'' in model.json file:'
 		print 'EXEC cdm.run'
 		print '	@model = N''https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json'','
-		print '	@command = ''generate'', -- or ''show-view'' to just display the SQL script'
+		print '	@command = ''generate'', -- or ''view'' to just display the SQL script'
 		print '	@entity = ''Product'''
 		print ''
 
@@ -75,9 +68,9 @@ AS BEGIN
 		return;
 	end
 
-    if (@command not in ('entities', 'show-entities', 'generate', 'view', 'show-view', 'script', 'files', 'columns', 'model')) begin
+    if (@command not in ('entities', 'generate', 'view', 'script', 'files', 'columns', 'model')) begin
         set @entity = @command;
-        set @command = 'show-view';
+        set @command = 'view';
     end
 
 	if (@view is null)
@@ -104,7 +97,7 @@ AS BEGIN
 		,@model_json = @json OUTPUT;  
 	--> model.json is loaded in @modelJSON
 
-	IF (@command IN ('show-model', 'model'))
+	IF (@command IN ('model'))
 	BEGIN
 		SELECT model = JSON_QUERY( @json ) FOR JSON PATH;
 		RETURN;
@@ -119,7 +112,7 @@ AS BEGIN
 	if(@collation not like '%UTF8')
 		set @collation = 'Latin1_General_100_CI_AS_SC_UTF8'
 
-	IF (@command IN ('show-entities', 'list-entities', 'entities'))
+	IF (@command IN ('entities'))
 	BEGIN
 		SELECT JSON_VALUE(j.value, '$.name') FROM OPENJSON (@json, '$.entities') as j
 		RETURN;
@@ -170,7 +163,7 @@ EXEC cdm.run
 
 	SET @columns = TRIM(',' FROM @columns);
 	SET @mapping = TRIM(',' FROM @mapping);
-	IF (@command IN ('show-columns', 'columns') )
+	IF (@command IN ('columns') )
 	BEGIN
 		PRINT @columns;
 		RETURN;
@@ -191,7 +184,7 @@ EXEC cdm.run
 	into #files
 	from locations;
 
-	IF (@command IN ('partitions', 'files', 'locations', 'show-partitions', 'show-files', 'show-locations') )
+	IF (@command IN ('partitions', 'files', 'locations') )
 	BEGIN
 		select * FROM #files;
 		drop table if exists #files;
@@ -212,7 +205,13 @@ EXEC cdm.run
 	declare @filelist varchar(max) = ''
 	select @filelist += ''''+
 			REPLACE(
+                /*
+                IIF(@model like '%.blob.core.windows.net%', 
 					REPLACE(location, '.dfs.core.windows.net', '.blob.core.windows.net'),
+                    REPLACE(location, '.blob.core.windows.net', '.dfs.core.windows.net')
+                    ),
+                */
+                location,
 				':443', '')
 			+''','
 	from #files;
@@ -307,36 +306,53 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 
 EXEC cdm.run
 
+-- Show the content of model.json file:
 EXEC cdm.run
 	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'model'
 
+-- Show all entities in model.json file:
 EXEC cdm.run
 	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'entities'
 
+-- Show the source script of the view that will be generated for the entity in model.json file:
 EXEC cdm.run
 	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'Customer'
 
+-- Show the source script of the view that will be generated for the entity in model.json file:
 EXEC cdm.run
 	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'script',
 	@entity = 'Product',
 	@options = '{"schema":"cdm"}'
 
+-- Show the files/partitions that belong to the entity in model.json file:
 EXEC cdm.run
 	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'files',
 	@entity = 'Product'
 
+-- Show the columns that belong to the entity in model.json file:
 EXEC cdm.run
 	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'columns',
 	@entity = 'Product'
 
+-- Generate script that will create the views for all entities in model.json file: 
 EXEC cdm.run
 	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'script'
+
+-- Take one row (or all) from the output and execute it as SQL script:
+EXEC cdm.run			
+    @model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',           
+    @command = N'generate',
+    @entity = 'Customer',
+    @view = 'dbo.Customer'
+
+-- Now you can query the view:
+SELECT TOP 10 * FROM dbo.Customer
 
 */
