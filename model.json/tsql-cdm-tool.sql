@@ -9,6 +9,10 @@
 SET QUOTED_IDENTIFIER OFF;
 GO
 
+IF(NOT EXISTS ( SELECT * FROM sys.schemas WHERE name = 'cdm'))
+    EXEC sp_executesql 'CREATE SCHEMA cdm';
+GO
+
 CREATE OR ALTER PROCEDURE cdm.run
 					@model nvarchar(4000) = NULL,
 					@command nvarchar(4000) = NULL,
