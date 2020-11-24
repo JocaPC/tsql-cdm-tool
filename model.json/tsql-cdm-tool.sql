@@ -28,6 +28,9 @@ AS BEGIN
 	declare @defaultFileType varchar(4000) = ISNULL(JSON_VALUE( @options, '$.defaultFileType'), 'CSV'); --> file type that will be used in format setting is not in model.json
 	declare @schema sysname =  ISNULL(JSON_VALUE(@options, '$.schema'), 'dbo');
 
+    if(@command is null and @model is not null)
+        set @command = 'model';
+
 	if(@command is null)
 	begin
 		print 'Usage:'
@@ -310,8 +313,7 @@ EXEC cdm.run
 
 -- Show the content of model.json file:
 EXEC cdm.run
-	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
-	@command = 'model'
+	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json'
 
 -- Show all entities in model.json file:
 EXEC cdm.run
@@ -326,7 +328,7 @@ EXEC cdm.run
 -- Show the source script of the view that will be generated for the entity in model.json file:
 EXEC cdm.run
 	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
-	@command = 'script',
+	@command = 'script', -- or 'generate' to create the view
 	@entity = 'Product',
 	@options = '{"schema":"cdm"}'
 
@@ -347,7 +349,7 @@ EXEC cdm.run
 	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
 	@command = 'script'
 
--- Take one row (or all) from the output and execute it as SQL script:
+-- Take one row (or all) from the output and execute it as SQL script. Example of one of the rows is:
 EXEC cdm.run			
     @model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',           
     @command = N'generate',
