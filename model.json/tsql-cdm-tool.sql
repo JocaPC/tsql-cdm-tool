@@ -80,6 +80,9 @@ AS BEGIN
 	if (@view is null)
 		set @view = @schema + '.' + @entity;
 
+    --IF(@model like 'http%.dfs.core.windows.net%')
+    --    SET @model = REPLACE(@model, '.dfs.core.windows.net', '.blob.core.windows.net')
+
 	---------------------------------------------------------------------------
 	-- Step 1/ - load model.json
 	---------------------------------------------------------------------------
@@ -209,12 +212,7 @@ EXEC cdm.run
 	declare @filelist varchar(max) = ''
 	select @filelist += ''''+
 			REPLACE(
-                /*
-                IIF(@model like '%.blob.core.windows.net%', 
-					REPLACE(location, '.dfs.core.windows.net', '.blob.core.windows.net'),
-                    REPLACE(location, '.blob.core.windows.net', '.dfs.core.windows.net')
-                    ),
-                */
+                --REPLACE(location, '.dfs.core.windows.net', '.blob.core.windows.net'),
                 location,
 				':443', '')
 			+''','
