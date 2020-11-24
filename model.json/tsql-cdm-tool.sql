@@ -1,4 +1,4 @@
-/*  Script: Generate Synapse SQL Serverless view (v3.3) that reads the latest version of CDM files
+/*  Script: Generate Synapse SQL Serverless view that reads the latest version of CDM files
 *   Author: Jovan Popovic <jovanpop@microsoft.com>
 *   Licence: MIT (see the end of the file)
 */
@@ -10,7 +10,7 @@ SET QUOTED_IDENTIFIER OFF;
 GO
 
 IF(NOT EXISTS ( SELECT * FROM sys.schemas WHERE name = 'cdm'))
-    EXEC sp_executesql 'CREATE SCHEMA cdm';
+    EXEC sp_executesql N'CREATE SCHEMA cdm';
 GO
 
 CREATE OR ALTER PROCEDURE cdm.run
@@ -241,7 +241,7 @@ EXEC cdm.run
 	from t2;
 
 	with rowsets as (
-	select rs = CONCAT( ' OPENROWSET( BULK ''',pattern,''',
+	select rs = CONCAT( ' OPENROWSET( BULK ''',REPLACE(REPLACE(pattern, '.csv*', '.csv'), '.parquet*', '.parquet'),''',
 							   FORMAT = ''', CASE [format] WHEN 'CsvFormatSettings' THEN 'CSV' ELSE @defaultFileType END ,''',
 							   FIRSTROW = ',IIF(hasColumnHeader=1, '2', '1'),',
 							   FIELDTERMINATOR = ''',delimiter,''')'), encoding
