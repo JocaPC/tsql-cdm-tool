@@ -48,7 +48,7 @@ In some scenarios you might want to see the `CREAE VIEW` script before you run i
 ```sql
 EXEC cdm.run
 	@model = N'https://myadlsstorage.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
-	@command = 'script', -- or 'generate' to create the view
+	@command = 'script',
 	@entity = 'Product',
 	@options = '{"schema":"cdm"}'
 ```
