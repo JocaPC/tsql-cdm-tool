@@ -43,9 +43,9 @@ SELECT TOP 10 * FROM dbo.Customer
 ```
 
 > **Important**
-> If you change the model.json file you would need to re-generate the views.
+> If you change the model.json file you would need to re-generate the view.
 
-In some scenarios you might want to see the `CREAE VIEW` script before you run it and if needed modofy it. You can see the source script of the view that will be generated for the entity in model.json file using `script` command:
+In some scenarios you might want to see the `CREAE VIEW` script before you run it and if needed modify it. You can also specify some options that will define schema name. You can see the source script of the view that will be generated for the entity in model.json file using `script` command:
 
 ```sql
 EXEC cdm.run
