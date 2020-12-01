@@ -1,4 +1,5 @@
-# tsql-cdm-tool
+# T-Sql CDM tool
+
 SQL library tool that works with Common Data Model. Currently it works with Serverless Synapse SQL pool.
 
 > Important
@@ -6,6 +7,8 @@ SQL library tool that works with Common Data Model. Currently it works with Serv
 
 # Setup
 
+- Execute the [following script](https://raw.githubusercontent.com/JocaPC/tsql-cdm-tool/main/model.json/tsql-cdm-tool.sql) in your database.
+- Setup acess to your Azure Data Lake storage where you have placed your CDM file. As an example, you could create creatednial with SAS key to your storage.
 
 # View the content of model.json file
 
