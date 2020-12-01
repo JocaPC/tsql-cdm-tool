@@ -1,14 +1,14 @@
 # T-Sql CDM tool
 
-SQL library tool that works with Common Data Model. Currently it works with serverless Synapse SQL pool.
+SQL library tool that works with Common Data Model. Currently, it works with serverless Synapse SQL pool.
 
-> [!Important]
-> This is community script and CDM is not supported in serverless SQL pool. Vote for CDM support on Azure feedback page if you need native support.
+> **Important**
+> This is community script and CDM is not supported in serverless SQL pool. Vote for CDM support on [Azure feedback page](https://feedback.azure.com/forums/307516-azure-synapse-analytics/filters/new?category_id=387862) if you need native support. This script is provided AS-IS under [MIT licence](https://github.com/JocaPC/tsql-cdm-tool/blob/main/LICENSE).
 
 # Setup
 
 - Execute the [following script](https://raw.githubusercontent.com/JocaPC/tsql-cdm-tool/main/model.json/tsql-cdm-tool.sql) in your database. This script will create `cdm` schema and procedure `cdm.run`.
-- Setup acess to your Azure Data Lake storage where you have placed your CDM file. As an example, you could create creatednial with SAS key to your storage.
+- Setup acess to your Azure Data Lake storage where you have placed your CDM file. As an example, you could create credential with SAS key to your storage.
 
 # View the content of model.json file
 
@@ -40,7 +40,7 @@ This action will create a view on top of you CDM data. Now, you are able to quer
 SELECT TOP 10 * FROM dbo.Customer
 ```
 
-> Important
+> **Important**
 > If you change the model.json file you would need to re-generate the views.
 
 In some scenarios you might want to see the `CREAE VIEW` script before you run it and if needed modofy it. You can see the source script of the view that will be generated for the entity in model.json file using `script` command:
