@@ -3,7 +3,9 @@
 SQL library tool that works with Common Data Model. Currently, it works with serverless Synapse SQL pool.
 
 > **Important**
-> This is community script and CDM is not supported in serverless SQL pool. Vote for CDM support on [Azure feedback page](https://feedback.azure.com/forums/307516-azure-synapse-analytics/filters/new?category_id=387862) if you need native support. This script is provided AS-IS under [MIT licence](https://github.com/JocaPC/tsql-cdm-tool/blob/main/LICENSE).
+> This is community script and CDM is not supported in serverless SQL pool. Vote for CDM support on [Azure feedback page](https://feedback.azure.com/forums/307516-azure-synapse-analytics/filters/new?category_id=387862) if you need native support. This script is provided AS-IS under [MIT licence](https://github.com/JocaPC/tsql-cdm-tool/blob/main/LICENSE). 
+
+you can report the bugs in the [issue section](https://github.com/JocaPC/tsql-cdm-tool/issues).
 
 # Setup
 
