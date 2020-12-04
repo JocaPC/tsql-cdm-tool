@@ -138,22 +138,8 @@ AS BEGIN
 	-- Step 1/ - load model.json
 	---------------------------------------------------------------------------
 	declare @json nvarchar(max);
-	declare @sqlGetModelJson nvarchar(max) = "
-	-- TODO: Replace this with SINGLE_CLOB
-	select @model_json = c.value
-	from openrowset(bulk '"+@model+"',
-	FORMAT='CSV',
-			FIELDTERMINATOR ='0x0b', 
-			FIELDQUOTE = '0x0b', 
-			ROWTERMINATOR = '0x0b'
-	) WITH (value varchar(max)) c;
-	"
-
-	EXECUTE sp_executesql  
-		@sqlGetModelJson  
-		,N'@model_json nvarchar(max) OUTPUT'  
-		,@model_json = @json OUTPUT;  
-	--> model.json is loaded in @modelJSON
+    
+    EXEC cdm.load @model, @json OUT
 
 	IF (@command IN ('model'))
 	BEGIN
