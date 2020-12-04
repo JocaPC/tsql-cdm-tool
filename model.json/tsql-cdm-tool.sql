@@ -13,6 +13,32 @@ IF(NOT EXISTS ( SELECT * FROM sys.schemas WHERE name = 'cdm'))
     EXEC sp_executesql N'CREATE SCHEMA cdm';
 GO
 
+CREATE OR ALTER FUNCTION cdm.columns (@json nvarchar(max), @entity nvarchar(200))
+RETURNS TABLE
+AS RETURN (
+	select 
+			name, 
+			dataType =
+			 CASE dataType
+				WHEN 'int64' THEN 'bigint'
+				WHEN 'int32' THEN 'int'
+				WHEN 'dateTime' THEN 'datetime2'
+				WHEN 'datetimeoffset' THEN 'datetimeoffset'
+				WHEN 'decimal' THEN 'decimal'
+				WHEN 'double' THEN 'float'
+				WHEN 'boolean' THEN 'varchar(5)' --> True or False
+				WHEN 'string' THEN 'nvarchar(max)'
+				WHEN 'guid' THEN 'uniqueidentifier'
+				WHEN 'json' THEN 'nvarchar(max)'
+				ELSE dataType
+			 END
+	from openjson(@json, '$.entities') e
+	   cross apply openjson(e.value, '$.attributes')
+	with (name sysname, dataType sysname)
+	where json_value(e.value, '$.name') = @entity
+)
+GO
+
 CREATE OR ALTER PROCEDURE cdm.run
 					@model nvarchar(4000) = NULL,
 					@command nvarchar(4000) = NULL,
@@ -151,31 +177,16 @@ EXEC cdm.run
 
 	-- TODO: Replace with STRING_AGG
 	select 
-			@columns += IIF(name IS NULL, '',  ( quotename(name) + ',')), 
-			@mapping += IIF(name IS NULL, '', ( quotename(name) + ' ' + 
-			 CASE dataType
-				WHEN 'int64' THEN 'bigint'
-				WHEN 'int32' THEN 'int'
-				WHEN 'dateTime' THEN 'datetime2'
-				WHEN 'datetimeoffset' THEN 'datetimeoffset'
-				WHEN 'decimal' THEN 'decimal'
-				WHEN 'double' THEN 'float'
-				WHEN 'boolean' THEN 'varchar(5)' --> True or False
-				WHEN 'string' THEN 'nvarchar(max)'
-				WHEN 'guid' THEN 'uniqueidentifier'
-				WHEN 'json' THEN 'nvarchar(max)'
-				ELSE dataType
-			 END + ','))
-	from openjson(@json, '$.entities') e
-	   cross apply openjson(e.value, '$.attributes')
-	with (name sysname, dataType sysname)
-	where json_value(e.value, '$.name') = @entity;
+		@columns += IIF(name IS NULL, '',  (quotename(name) + ',')), 
+		@mapping += IIF(name IS NULL, '', ( name + ' ' + dataType + ','))
+	from
+        cdm.columns(@json, @entity) e;
 
 	SET @columns = TRIM(',' FROM @columns);
 	SET @mapping = TRIM(',' FROM @mapping);
 	IF (@command IN ('columns') )
 	BEGIN
-		PRINT @columns;
+		SELECT * FROM cdm.columns(@json, @entity)
 		RETURN;
 	END;
 
