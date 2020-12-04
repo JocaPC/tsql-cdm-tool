@@ -20,7 +20,7 @@ AS BEGIN
 	-- TODO: Replace this with SINGLE_CLOB
 	select @model_json = c.value
 	from openrowset(bulk '"+@path+"',
-	FORMAT='CSV',
+			FORMAT='CSV',
 			FIELDTERMINATOR ='0x0b', 
 			FIELDQUOTE = '0x0b', 
 			ROWTERMINATOR = '0x0b'
@@ -69,12 +69,12 @@ CREATE OR ALTER PROCEDURE cdm.run
 					@options nvarchar(max) = '{}'
 AS BEGIN
 
-	drop table if exists #files
-	drop table if exists #groups
+    drop table if exists #files
+    drop table if exists #groups
 
-	declare @partitions varchar(4000) =  ISNULL(JSON_VALUE( @options, '$.partitions'), '');
-	declare @defaultFileType varchar(4000) = ISNULL(JSON_VALUE( @options, '$.defaultFileType'), 'CSV'); --> file type that will be used in format setting is not in model.json
-	declare @schema sysname =  ISNULL(JSON_VALUE(@options, '$.schema'), 'dbo');
+    declare @partitions varchar(4000) =  ISNULL(JSON_VALUE( @options, '$.partitions'), '');
+    declare @defaultFileType varchar(4000) = ISNULL(JSON_VALUE( @options, '$.defaultFileType'), 'CSV'); --> file type that will be used in format setting is not in model.json
+    declare @schema sysname =  ISNULL(JSON_VALUE(@options, '$.schema'), 'dbo');
 
     if(@command is null and @model is not null)
         set @command = 'model';
@@ -123,23 +123,23 @@ AS BEGIN
 		return;
 	end
 
-    if (@command not in ('entities', 'generate', 'view', 'script', 'files', 'columns', 'model')) begin
-        set @entity = @command;
-        set @command = 'view';
-    end
+	if (@command not in ('entities', 'generate', 'view', 'script', 'files', 'columns', 'model')) begin
+            set @entity = @command;
+            set @command = 'view';
+	end
 
 	if (@view is null)
 		set @view = @schema + '.' + @entity;
 
-    --IF(@model like 'http%.dfs.core.windows.net%')
-    --    SET @model = REPLACE(@model, '.dfs.core.windows.net', '.blob.core.windows.net')
+--IF(@model like 'http%.dfs.core.windows.net%')
+--    SET @model = REPLACE(@model, '.dfs.core.windows.net', '.blob.core.windows.net')
 
 	---------------------------------------------------------------------------
 	-- Step 1/ - load model.json
 	---------------------------------------------------------------------------
 	declare @json nvarchar(max);
     
-    EXEC cdm.load @model, @json OUT
+	EXEC cdm.load @model, @json OUT
 
 	IF (@command IN ('model'))
 	BEGIN
@@ -164,20 +164,12 @@ AS BEGIN
 
 	IF (@command IN ('generate', 'script') AND (@entity IS NULL))
 	BEGIN
-
-    /*
-EXEC cdm.run
-	@model = N'https://jovanpoptest.blob.core.windows.net/odipac-microsoft/ODIPAC/model.json',
-    @command = 'script',
-    @entity = 'Customer',
-    @view = 'dbo.Customer'
-    */
 		SELECT CONCAT(
 'EXEC cdm.run
-			@model = N''',@model, ''',
+            @model = N''',@model, ''',
             @command = N''generate'',
-			@entity = ''', JSON_VALUE(j.value, '$.name'), ''',
-			@view = ''', @schema, '.', JSON_VALUE(j.value, '$.name'), '''')
+            @entity = ''', JSON_VALUE(j.value, '$.name'), ''',
+            @view = ''', @schema, '.', JSON_VALUE(j.value, '$.name'), '''')
 		FROM OPENJSON (@json, '$.entities') as j
 
 		RETURN;
@@ -192,6 +184,7 @@ EXEC cdm.run
 
 	SET @columns = TRIM(',' FROM @columns);
 	SET @mapping = TRIM(',' FROM @mapping);
+
 	IF (@command IN ('columns') )
 	BEGIN
 		SELECT * FROM cdm.columns(@json, @entity)
@@ -199,15 +192,15 @@ EXEC cdm.run
 	END;
 
 	with locations as (
-	select location, [format], hasColumnHeader, delimiter, encoding
-	from openjson(@json, '$.entities') e
-	   cross apply openjson(e.value, '$.partitions')
-	with (  location nvarchar(4000),
+	    select location, [format], hasColumnHeader, delimiter, encoding
+	    from openjson(@json, '$.entities') e
+	        cross apply openjson(e.value, '$.partitions')
+	        with (  location nvarchar(4000),
 			[format] nvarchar(50) '$.fileFormatSettings."$type"',
 			[hasColumnHeader] bit '$.fileFormatSettings.columnHeaders',
 			delimiter nvarchar(1) '$.fileFormatSettings.delimiter',
 			[encoding] varchar(10) '$.fileFormatSettings.encoding')
-	where json_value(e.value, '$.name') = @entity
+	    where json_value(e.value, '$.name') = @entity
 	)
 	select *
 	into #files
@@ -234,8 +227,8 @@ EXEC cdm.run
 	declare @filelist varchar(max) = ''
 	select @filelist += ''''+
 			REPLACE(
-                --REPLACE(location, '.dfs.core.windows.net', '.blob.core.windows.net'),
-                location,
+--REPLACE(location, '.dfs.core.windows.net', '.blob.core.windows.net'),
+				location,
 				':443', '')
 			+''','
 	from #files;
@@ -260,11 +253,11 @@ EXEC cdm.run
 	from t2;
 
 	with rowsets as (
-	select rs = CONCAT( ' OPENROWSET( BULK ''',REPLACE(REPLACE(pattern, '.csv*', '.csv'), '.parquet*', '.parquet'),''',
+	    select rs = CONCAT( ' OPENROWSET( BULK ''',REPLACE(REPLACE(pattern, '.csv*', '.csv'), '.parquet*', '.parquet'),''',
 							   FORMAT = ''', CASE [format] WHEN 'CsvFormatSettings' THEN 'CSV' ELSE @defaultFileType END ,''',
 							   FIRSTROW = ',IIF(hasColumnHeader=1, '2', '1'),',
 							   FIELDTERMINATOR = ''',delimiter,''')'), encoding
-	from #groups
+	    from #groups
 	)
 	-- TODO: Replace with STRING_AGG
 	SELECT  @sql += ' UNION ALL 
@@ -290,11 +283,9 @@ EXEC cdm.run
 		drop table if exists #groups
 		RETURN;
 	END
-    PRINT 'Creating view...'
+	PRINT 'Creating view...'
 	EXEC (@sql)
-    PRINT 'View is created!'
-	--SELECT [XML_F52E2B61-18A1-11d1-B105-00805F49916B] = @sql
-	--print @sql
+	PRINT 'View is created!'
 	
 	drop table if exists #files
 	drop table if exists #groups
