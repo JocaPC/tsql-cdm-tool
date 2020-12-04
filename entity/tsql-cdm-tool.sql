@@ -13,7 +13,29 @@ IF(NOT EXISTS ( SELECT * FROM sys.schemas WHERE name = 'cdm'))
     EXEC sp_executesql N'CREATE SCHEMA cdm';
 GO
 
-CREATE FUNCTION cdm.files (@json nvarchar(max), @dataSource sysname = 'CDM')
+CREATE OR ALTER PROCEDURE cdm.load (@path VARCHAR(4000), @json NVARCHAR(MAX) OUT)
+AS BEGIN
+
+	declare @sqlGetModelJson nvarchar(max) = "
+	-- TODO: Replace this with SINGLE_CLOB
+	select @model_json = c.value
+	from openrowset(bulk '"+@path+"',
+			FORMAT='CSV',
+			FIELDTERMINATOR ='0x0b', 
+			FIELDQUOTE = '0x0b', 
+			ROWTERMINATOR = '0x0b'
+	) WITH (value varchar(max)) c;";
+
+	EXECUTE sp_executesql  
+		@sqlGetModelJson  
+		,N'@model_json nvarchar(max) OUTPUT'  
+		,@model_json = @json OUTPUT;  
+	--> model.json is loaded in @json
+
+END
+GO
+
+CREATE OR ALTER FUNCTION cdm.files (@json nvarchar(max), @dataSource sysname = 'CDM')
 RETURNS TABLE
 AS RETURN (
     with files as ( 
