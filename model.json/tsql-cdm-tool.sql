@@ -192,7 +192,7 @@ AS BEGIN
 	END;
 
 	with locations as (
-	    select location, [format], hasColumnHeader, delimiter, encoding
+	    select location, [format], hasColumnHeader = ISNULL(hasColumnHeader,0), delimiter = ISNULL(delimiter, ','), encoding
 	    from openjson(@json, '$.entities') e
 	        cross apply openjson(e.value, '$.partitions')
 	        with (  location nvarchar(4000),
